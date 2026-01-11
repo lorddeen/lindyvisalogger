@@ -51,7 +51,7 @@ if __name__ == "__main__":
                 timestamp = datetime.datetime.now().isoformat() # Current timestamp
                 print(f"{timestamp}, {voltage}")
                 writer.writerow([timestamp, voltage]) # Log the reading
-                file.flush
+                file.flush()  # Ensure data is written to file
                 time.sleep(vl.TIMESTEP)  
             except KeyboardInterrupt:
                 print("Logging stopped by user.")
