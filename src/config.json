@@ -1,0 +1,7 @@
+{
+    "host": "127.0.0.1",
+    "port": 5025,
+    "resource_type": "TCPIP0",
+    "timestep": 0.5,
+    "timeout_ms": 5000
+}
