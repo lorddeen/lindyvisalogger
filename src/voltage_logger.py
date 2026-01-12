@@ -5,29 +5,31 @@ import time
 import datetime 
 import csv
 import json
+import pathlib
 
 
 class VoltageLogger:
     def __init__(self):
-        with open('config.json', 'r') as f:
+       config_path = pathlib.Path(__file__).parent / "config.json"
+       with open(config_path, 'r') as f:
             config = json.load(f)
-        self.HOST=config["host"]
-        self.PORT=config["port"]
-        self.TYPE=config["resource_type"]
-        self.TIMESTEP=config["timestep"]  # in seconds
-        self.FILENAME=f"voltage_log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+       self.HOST=config["host"]
+       self.PORT=config["port"]
+       self.TYPE=config["resource_type"]
+       self.TIMESTEP=config["timestep"]  # in seconds
+       self.FILENAME=f"voltage_log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
-        rm = pyvisa.ResourceManager()
-        self.instrument = rm.open_resource(f"{self.TYPE}::{self.HOST}::{self.PORT}::SOCKET")
-        print(f"Connected to instrument {self.HOST}:{self.PORT}")
-        self.instrument.read_termination = '\n'
-        self.instrument.write_termination = '\n'    
-        self.instrument.timeout = config["timeout_ms"] # in milliseconds
-        self.ID = self.instrument.query("*IDN?")
-        print(f"Instrument ID: {self.ID}")
+       rm = pyvisa.ResourceManager()
+       self.instrument = rm.open_resource(f"{self.TYPE}::{self.HOST}::{self.PORT}::SOCKET")
+       print(f"Connected to instrument {self.HOST}:{self.PORT}")
+       self.instrument.read_termination = '\n'
+       self.instrument.write_termination = '\n'    
+       self.instrument.timeout = config["timeout_ms"] # in milliseconds
+       self.ID = self.instrument.query("*IDN?")
+       print(f"Instrument ID: {self.ID}")
 
     def measure_voltage(self):
-        return self.instrument.query("MEAS:VOLT?")
+       return self.instrument.query("MEAS:VOLT?")
 
     def log_init(self):
         with open(self.FILENAME, mode='w', newline='') as file:
@@ -56,8 +58,13 @@ if __name__ == "__main__":
             except KeyboardInterrupt:
                 print("Logging stopped by user.")
                 break
+            except pyvisa.errors.VisaIOError as e:
+                print(f"An error occurred: {e} Retrying...")
+                time.sleep(vl.TIMESTEP)
+                continue                   
             except Exception as e:
                 print(f"An error occurred: {e}")
+                print("Logging stopped.")
                 break
             
     vl.instrument.close()
